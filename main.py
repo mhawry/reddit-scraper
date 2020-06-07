@@ -4,21 +4,22 @@ import os
 import requests
 import tqdm
 import json
+from fake_useragent import UserAgent
 
-USER_AGENT = 'Reddit JSON API/1.0'
 LIMIT = 100
 
 
 def fetch_posts(username):
     """Fetches all the posts from a user's profile"""
-    posts_json = []
     after = ''
+    ua = UserAgent()
+    posts_json = []
 
     # we can only fetch 100 posts per call with Reddit's json API
     # this will loop through them until we get them all
     while after is not None:
         r = requests.get('https://www.reddit.com/user/{}/submitted/.json?limit={}&after={}'.format(username, LIMIT, after),
-                         headers={'User-Agent': USER_AGENT}).json()
+                         headers={'User-Agent': ua.random}).json()
 
         # in case the username doesn't exist
         if 'error' in r and r['error'] == 404:
