@@ -1,6 +1,7 @@
 import logging
 import argparse
 import os
+import sys
 import requests
 import tqdm
 import json
@@ -75,42 +76,47 @@ def download_posts(username, destination):
 
 
 def main():
-    logging.getLogger().setLevel(logging.INFO)
+    try:
+        logging.getLogger().setLevel(logging.INFO)
 
-    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S')
+        logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
+                            datefmt='%Y-%m-%d %H:%M:%S')
 
-    current_dir = os.path.dirname(os.path.abspath(__file__))
+        current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    ap = argparse.ArgumentParser(description='reddit-scraper is a command-line application written in Python that scrapes and downloads a Reddit user\'s posts.',
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+        ap = argparse.ArgumentParser(description='reddit-scraper is a command-line application written in Python that scrapes and downloads a Reddit user\'s posts.',
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    ap.add_argument('--username', '-u', help='Username of the Reddit user to scrape.')
-    ap.add_argument('--destination', '-d', default=current_dir, help='Specify the download destination. By default, posts will be downloaded to <current working directory>/<username>.')
+        ap.add_argument('--username', '-u', help='Username of the Reddit user to scrape.')
+        ap.add_argument('--destination', '-d', default=current_dir, help='Specify the download destination. By default, posts will be downloaded to <current working directory>/<username>.')
 
-    args = ap.parse_args()
+        args = ap.parse_args()
 
-    if not args.username:
-        logging.error('You must provide a username')  # username is mandatory
-        return
+        if not args.username:
+            logging.error('You must provide a username')  # username is mandatory
+            return
 
-    username = args.username
-    destination = args.destination
+        username = args.username
+        destination = args.destination
 
-    if not os.path.exists(destination):
-        logging.error('The specified destination does not exist')
-        return
+        if not os.path.exists(destination):
+            logging.error('The specified destination does not exist')
+            return
 
-    if not os.path.isdir(destination):
-        logging.error('The specified destination is not a valid directory')
-        return
+        if not os.path.isdir(destination):
+            logging.error('The specified destination is not a valid directory')
+            return
 
-    logging.info('Scraping posts from {}'.format(username))
+        logging.info('Scraping posts from {}'.format(username))
 
-    # if we reach this point we can start downloading the posts
-    download_posts(username, destination)
+        # if we reach this point we can start downloading the posts
+        download_posts(username, destination)
 
-    logging.info('Scraping complete')
+        logging.info('Scraping complete')
+    except KeyboardInterrupt:
+        print('Shutdown requested... exiting')
+
+    sys.exit(0)
 
 
 if __name__ == '__main__':
