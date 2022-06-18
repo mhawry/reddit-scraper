@@ -5,22 +5,21 @@ import sys
 import requests
 import tqdm
 import json
-from fake_useragent import UserAgent
 from typing import Optional
 
 LIMIT_PER_PAGE = 100  # we can only fetch 100 posts per call with Reddit's API
+USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.84 Safari/537.36'
 
 
 def fetch_posts(username: str) -> Optional[list]:
     """Fetches all the posts from a user's profile"""
     after = ''
-    ua = UserAgent()
     posts_json = []
 
     # this will loop through the posts page by page
     while after is not None:
         r = requests.get(f"https://www.reddit.com/user/{username}/submitted/.json?limit={LIMIT_PER_PAGE}&after={after}",
-                         headers={'User-Agent': ua.random}).json()
+                         headers={'User-Agent': USER_AGENT}).json()
 
         # in case the username doesn't exist
         if 'error' in r and r['error'] == 404:
