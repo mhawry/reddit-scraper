@@ -5,8 +5,10 @@ import sys
 import requests
 import tqdm
 import json
+from datetime import datetime
 from typing import Optional
 
+DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 LIMIT_PER_PAGE = 100  # we can only fetch 100 posts per call with Reddit's API
 USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.84 Safari/537.36'
 
@@ -55,7 +57,7 @@ class RedditScraper:
             os.mkdir(download_dir)
 
         for post_json in tqdm.tqdm(posts_json,
-                                   desc=f"Downloading posts from user {username}",
+                                   desc=f"{datetime.now().strftime(DATETIME_FORMAT)} Downloading posts from user {username}",
                                    unit=' posts',
                                    ncols=0,
                                    disable=self.quiet):
@@ -88,7 +90,7 @@ def main():
         logging.getLogger().setLevel(logging.INFO)
 
         logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                            datefmt='%Y-%m-%d %H:%M:%S')
+                            datefmt=DATETIME_FORMAT)
 
         current_dir = os.path.dirname(os.path.abspath(__file__))
 
