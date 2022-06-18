@@ -14,8 +14,9 @@ USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36
 class RedditScraper:
     """RedditScraper scrapes and downloads a Reddit user's posts"""
 
-    def __init__(self, limit_per_page: int):
+    def __init__(self, limit_per_page: int, quiet: bool):
         self.limit_per_page = limit_per_page
+        self.quiet = quiet
 
     def fetch_posts(self, username: str) -> Optional[list]:
         """Fetches all the posts from a user's profile"""
@@ -56,7 +57,8 @@ class RedditScraper:
         for post_json in tqdm.tqdm(posts_json,
                                    desc=f"Downloading posts from user {username}",
                                    unit=' posts',
-                                   ncols=0):
+                                   ncols=0,
+                                   disable=self.quiet):
             if 'url' in post_json['data']:
                 url = post_json['data']['url']
                 filename = url.rsplit('/', 1)[-1]
@@ -90,14 +92,21 @@ def main():
 
         current_dir = os.path.dirname(os.path.abspath(__file__))
 
-        ap = argparse.ArgumentParser(description="reddit-scraper is a command-line application written in Python that scrapes a Reddit user's posts and downloads all images.",
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+        parser = argparse.ArgumentParser(
+            description="reddit-scraper is a command-line application written in Python that scrapes a Reddit user's posts and downloads all images.",
+            formatter_class=argparse.RawDescriptionHelpFormatter)
 
-        ap.add_argument('--username', '-u', help="Username of the Reddit user to scrape.")
-        ap.add_argument('--destination', '-d', default=current_dir, help="Specify the download destination. By default, posts will be stored in <current working directory>/<username>.")
-        ap.add_argument('--include-metadata', '-m', dest='include_metadata', default=False, action='store_true', help="Download the metadata. A JSON file will be created for each post in the same directory as the images.")
+        parser.add_argument('--username', '-u',
+                            help="Username of the Reddit user to scrape")
+        parser.add_argument('--destination', '-d', default=current_dir,
+                            help="Specify the download destination. By default, posts will be stored in <current working directory>/<username>")
+        parser.add_argument('--quiet', '-q', default=False, action='store_true',
+                            help="Be quiet while scraping")
+        parser.add_argument('--include-metadata', dest='include_metadata',
+                            default=False, action='store_true',
+                            help="Download the metadata. A JSON file will be created for each post in the same directory as the images")
 
-        args = ap.parse_args()
+        args = parser.parse_args()
 
         if not args.username:
             logging.error("You must provide a username")  # username is mandatory
@@ -114,7 +123,7 @@ def main():
         logging.info(f"Scraping posts from {args.username}")
 
         # if we reach this point we can start downloading the posts
-        reddit_scraper = RedditScraper(limit_per_page=LIMIT_PER_PAGE)
+        reddit_scraper = RedditScraper(limit_per_page=LIMIT_PER_PAGE, quiet=args.quiet)
         reddit_scraper.download_posts(args.username, args.destination, args.include_metadata)
 
         logging.info("Scraping complete")
