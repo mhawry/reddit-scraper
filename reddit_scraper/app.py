@@ -16,9 +16,10 @@ USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36
 class RedditScraper:
     """RedditScraper scrapes and downloads a Reddit user's posts"""
 
-    def __init__(self, limit_per_page: int, quiet: bool):
+    def __init__(self, limit_per_page: int, quiet: bool, maximum: bool = 0):
         self.limit_per_page = limit_per_page
         self.quiet = quiet
+        self.maximum = maximum
 
     def fetch_posts(self, username: str) -> Optional[list]:
         """Fetches all the posts from a user's profile"""
@@ -26,9 +27,14 @@ class RedditScraper:
         posts_json = []
 
         # this will loop through the posts page by page
-        while after is not None:
+        count = 0
+        maximum_reached = False
+        while after is not None and maximum_reached is False:
+            # we don't want to pull more posts than necessary
+            limit = min(self.limit_per_page, self.maximum or self.limit_per_page)
+
             r = requests.get(
-                f"https://www.reddit.com/user/{username}/submitted/.json?limit={self.limit_per_page}&after={after}",
+                f"https://www.reddit.com/user/{username}/submitted/.json?limit={limit}&after={after}",
                 headers={'User-Agent': USER_AGENT}).json()
 
             # in case the username doesn't exist
@@ -38,6 +44,11 @@ class RedditScraper:
 
             for child in r['data']['children']:
                 posts_json.append(child)
+
+                count = count + 1
+                if self.maximum != 0 and count >= self.maximum:
+                    maximum_reached = True
+                    break
 
             after = r['data']['after']
 
@@ -104,6 +115,8 @@ def main():
                             help="Specify the download destination. By default, posts will be stored in <current working directory>/<username>")
         parser.add_argument('--quiet', '-q', default=False, action='store_true',
                             help="Be quiet while scraping")
+        parser.add_argument('--maximum', '-m', type=int, default=0,
+                            help="Maximum number of posts to scrape")
         parser.add_argument('--include-metadata', dest='include_metadata',
                             default=False, action='store_true',
                             help="Download the metadata. A JSON file will be created for each post in the same directory as the images")
@@ -122,10 +135,14 @@ def main():
             logging.error("The specified destination is not a valid directory")
             return
 
+        if type(args.maximum) != int:
+            logging.error("The maximum value must be an integer")
+            return
+
         logging.info(f"Scraping posts from {args.username}")
 
         # if we reach this point we can start downloading the posts
-        reddit_scraper = RedditScraper(limit_per_page=LIMIT_PER_PAGE, quiet=args.quiet)
+        reddit_scraper = RedditScraper(limit_per_page=LIMIT_PER_PAGE, quiet=args.quiet, maximum=args.maximum)
         reddit_scraper.download_posts(args.username, args.destination, args.include_metadata)
 
         logging.info("Scraping complete")
