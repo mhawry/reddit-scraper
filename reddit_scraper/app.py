@@ -16,10 +16,12 @@ USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36
 class RedditScraper:
     """RedditScraper scrapes and downloads a Reddit user's posts"""
 
-    def __init__(self, limit_per_page: int, quiet: bool, maximum: bool = 0):
+    def __init__(self, limit_per_page: int, destination: str, quiet: bool, maximum: bool = 0, include_metadata: bool = False):
         self.limit_per_page = limit_per_page
+        self.destination = destination
         self.quiet = quiet
         self.maximum = maximum
+        self.include_metadata = include_metadata
 
     def fetch_posts(self, username: str) -> Optional[list]:
         """Fetches all the posts from a user's profile"""
@@ -54,7 +56,7 @@ class RedditScraper:
 
         return posts_json
 
-    def download_posts(self, username: str, destination: str, include_metadata: bool) -> None:
+    def download_posts(self, username: str) -> None:
         """Crawls through a user's posts and downloads them"""
         posts_json = self.fetch_posts(username)
 
@@ -62,7 +64,7 @@ class RedditScraper:
         if not posts_json:
             return
 
-        download_dir = os.path.join(destination, username)
+        download_dir = os.path.join(self.destination, username)
 
         if not os.path.exists(download_dir):
             os.mkdir(download_dir)
@@ -86,7 +88,7 @@ class RedditScraper:
                     file = os.path.join(download_dir, filename)
                     open(file, 'wb').write(r.content)
 
-                    if include_metadata:
+                    if self.include_metadata:
                         filename = f"{post_json['data']['id']}.json"
                         file = os.path.join(download_dir, filename)
 
@@ -142,8 +144,12 @@ def main():
         logging.info(f"Scraping posts from {args.username}")
 
         # if we reach this point we can start downloading the posts
-        reddit_scraper = RedditScraper(limit_per_page=LIMIT_PER_PAGE, quiet=args.quiet, maximum=args.maximum)
-        reddit_scraper.download_posts(args.username, args.destination, args.include_metadata)
+        reddit_scraper = RedditScraper(limit_per_page=LIMIT_PER_PAGE,
+                                       destination=args.destination,
+                                       quiet=args.quiet,
+                                       maximum=args.maximum,
+                                       include_metadata=args.include_metadata)
+        reddit_scraper.download_posts(args.username)
 
         logging.info("Scraping complete")
     except KeyboardInterrupt:
