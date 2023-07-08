@@ -112,16 +112,16 @@ def main():
             formatter_class=argparse.RawDescriptionHelpFormatter)
 
         parser.add_argument('--username', '-u',
-                            help="Username of the Reddit user to scrape")
+                            help="Username of the Reddit user to scrape.")
         parser.add_argument('--destination', '-d', default=current_dir,
-                            help="Specify the download destination. By default, posts will be stored in <current working directory>/<username>")
+                            help="Specify the download destination. By default, posts will be stored in <current working directory>/<username>.")
         parser.add_argument('--quiet', '-q', default=False, action='store_true',
-                            help="Be quiet while scraping")
+                            help="Be quiet while scraping.")
         parser.add_argument('--limit', '-l', type=int, default=0,
-                            help="Maximum number of posts to scrape")
+                            help="Maximum number of posts to scrape.")
         parser.add_argument('--include-metadata', dest='include_metadata',
                             default=False, action='store_true',
-                            help="Download the metadata. A JSON file will be created for each post in the same directory as the images")
+                            help="Download the metadata. A JSON file will be created for each post in the same directory as the images.")
 
         args = parser.parse_args()
 
