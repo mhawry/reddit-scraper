@@ -24,22 +24,26 @@ class RedditScraper:
         self.include_metadata = include_metadata
 
     def fetch_posts(self, username: str) -> Optional[list]:
-        """Fetches all the posts from a user's profile"""
+        """
+        Fetches posts from a user's Reddit account.
+
+        :param username: The username to retrieve the posts from.
+        :return: The user's posts in JSON format.
+        """
         after = ''
         posts_json = []
 
-        # this will loop through the posts page by page
+        # loop through the posts page by page
         count = 0
         limit_reached = False
         while after is not None and limit_reached is False:
-            # we don't want to pull more posts than necessary
             limit = min(self.limit_per_page, self.limit or self.limit_per_page)
 
             r = requests.get(
                 f"https://www.reddit.com/user/{username}/submitted/.json?limit={limit}&after={after}",
                 headers={'User-Agent': USER_AGENT}).json()
 
-            # in case the username doesn't exist
+            # if the username doesn't exist
             if 'error' in r and r['error'] == 404:
                 logging.error(f"{username} is not a valid Reddit username")
                 return
@@ -57,10 +61,14 @@ class RedditScraper:
         return posts_json
 
     def download_posts(self, username: str) -> None:
-        """Crawls through a user's posts and downloads them"""
+        """
+        Downloads a Reddit user's posts.
+
+        :param username: The username to download the posts from.
+        """
         posts_json = self.fetch_posts(username)
 
-        # in case the user doesn't have any posts
+        # if the user doesn't have any posts
         if not posts_json:
             return
 
@@ -126,7 +134,7 @@ def main():
         args = parser.parse_args()
 
         if not args.username:
-            logging.error("You must provide a username")  # username is mandatory
+            logging.error("You must provide a username")
             return
 
         if not os.path.exists(args.destination):
@@ -143,7 +151,6 @@ def main():
 
         logging.info(f"Scraping posts from {args.username}")
 
-        # if we reach this point we can start downloading the posts
         reddit_scraper = RedditScraper(limit_per_page=LIMIT_PER_PAGE,
                                        destination=args.destination,
                                        quiet=args.quiet,
