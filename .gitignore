@@ -1,7 +1,10 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 
-venv/
+.venv/
 
-# Used by JetBrains IDEs
+# IDE config files
+.vscode/
 .idea/
+
+.DS_Store
